@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2027 高考倒计时</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+    background: linear-gradient(160deg, #0a1a3d 0%, #123a7a 45%, #0b2558 100%);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    text-align: center;
+    overflow: hidden;
+    position: relative;
+  }
+  .glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(90px);
+    opacity: .35;
+    pointer-events: none;
+  }
+  .glow1 { width: 420px; height: 420px; background: #2e6bff; top: -100px; left: -100px; }
+  .glow2 { width: 380px; height: 380px; background: #7a4bff; bottom: -120px; right: -80px; }
+  .mol {
+    position: absolute;
+    color: #bcd4ff;
+    font-weight: 600;
+    white-space: nowrap;
+    opacity: .13;
+    pointer-events: none;
+    user-select: none;
+    animation: floaty var(--dur) ease-in-out infinite alternate,
+               drift var(--dur2) linear infinite alternate;
+  }
+  @keyframes floaty {
+    from { transform: translateY(-18px) rotate(var(--rot)); }
+    to   { transform: translateY(18px)  rotate(var(--rot)); }
+  }
+  @keyframes drift {
+    from { margin-left: -30px; }
+    to   { margin-left: 30px; }
+  }
+  main { position: relative; z-index: 1; padding: 24px; }
+  h1 {
+    font-size: clamp(24px, 4vw, 44px);
+    font-weight: 600;
+    letter-spacing: .15em;
+    margin-bottom: 12px;
+    text-shadow: 0 0 20px rgba(120, 170, 255, .6);
+  }
+  .target { font-size: clamp(14px, 2vw, 20px); color: #a9c4ff; margin-bottom: 40px; letter-spacing: .1em; }
+  .days {
+    font-size: clamp(110px, 26vw, 260px);
+    font-weight: 800;
+    line-height: 1;
+    background: linear-gradient(180deg, #ffffff 20%, #8fb8ff 90%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 60px rgba(110, 160, 255, .25);
+  }
+  .unit { font-size: clamp(20px, 3vw, 34px); color: #cfe0ff; letter-spacing: .4em; margin-top: 10px; text-indent: .4em; }
+  .motto {
+    margin-top: 50px;
+    font-size: clamp(14px, 2vw, 20px);
+    color: #9db9f5;
+    letter-spacing: .2em;
+    opacity: .9;
+  }
+</style>
+</head>
+<body>
+  <div class="glow glow1"></div>
+  <div class="glow glow2"></div>
+  <span class="mol" style="top:12%;  left:8%;  font-size:44px; --dur:9s;  --dur2:14s; --rot:-12deg;">H₂O</span>
+  <span class="mol" style="top:62%;  left:14%; font-size:64px; --dur:11s; --dur2:18s; --rot:8deg;">C₆H₆</span>
+  <span class="mol" style="top:24%;  right:10%; font-size:52px; --dur:10s; --dur2:16s; --rot:14deg;">NaCl</span>
+  <span class="mol" style="top:70%;  right:16%; font-size:40px; --dur:8s;  --dur2:12s; --rot:-10deg;">CO₂</span>
+  <span class="mol" style="top:44%;  left:2%;  font-size:36px; --dur:12s; --dur2:20s; --rot:6deg;">H₂SO₄</span>
+  <span class="mol" style="top:6%;   left:46%; font-size:34px; --dur:9s;  --dur2:15s; --rot:-6deg;">O₂</span>
+  <main>
+    <h1>2027 高考倒计时</h1>
+    <p class="target">目标日期：2027 年 6 月 7 日</p>
+    <div class="days" id="days">--</div>
+    <div class="unit">天</div>
+    <p class="motto">星光不负赶路人，加油！</p>
+  </main>
+<script>
+  // 以本地时区计算，目标日为 2027-06-07 00:00
+  var target = new Date(2027, 5, 7, 0, 0, 0);
+  function update() {
+    var now = new Date();
+    var diff = target - now;
+    if (diff <= 0) {
+      document.getElementById('days').textContent = '0';
+      return;
+    }
+    var days = Math.floor(diff / 86400000);
+    // 不足一天但还有剩余时间时，向上取整更符合“还有几天考试”的直觉
+    document.getElementById('days').textContent = days;
+  }
+  update();
+  setInterval(update, 60000);
+</script>
+</body>
+</html>

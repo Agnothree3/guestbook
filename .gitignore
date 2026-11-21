@@ -1,0 +1,5 @@
+node_modules/
+guestbook.db
+guestbook.db-wal
+guestbook.db-shm
+npm-debug.log*

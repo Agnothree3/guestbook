@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>留言板</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+    background: #f4f6fa;
+    color: #333;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 40px 16px;
+  }
+  .container { width: 100%; max-width: 640px; }
+  h1 { font-size: 26px; margin-bottom: 20px; text-align: center; color: #2c3e50; }
+  .panel {
+    background: #fff;
+    border: 1px solid #e3e8f0;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(30, 60, 120, .06);
+  }
+  label { display: block; font-size: 14px; color: #666; margin-bottom: 6px; }
+  input[type=text], textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d5dce6;
+    border-radius: 6px;
+    font-size: 15px;
+    font-family: inherit;
+    margin-bottom: 14px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  input[type=text]:focus, textarea:focus { border-color: #4a7dff; }
+  textarea { resize: vertical; min-height: 80px; }
+  button {
+    background: #4a7dff;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 24px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  button:hover { background: #3568e8; }
+  button:disabled { background: #a9bde8; cursor: default; }
+  .msg {
+    background: #fff;
+    border: 1px solid #e3e8f0;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 4px rgba(30, 60, 120, .05);
+  }
+  .msg-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 6px;
+  }
+  .msg-name { font-weight: 600; color: #2c3e50; }
+  .msg-time { font-size: 12px; color: #9aa5b5; }
+  .msg-text { font-size: 15px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+  .msg .del {
+    background: none;
+    border: none;
+    color: #b03a3a;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 0 0 0 8px;
+  }
+  .msg .del:hover { text-decoration: underline; }
+  .empty { text-align: center; color: #9aa5b5; padding: 24px 0; font-size: 14px; }
+  .error { color: #b03a3a; font-size: 14px; margin-bottom: 10px; display: none; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>留 言 板</h1>
+    <div class="panel">
+      <label for="name">昵称</label>
+      <input type="text" id="name" maxlength="20" placeholder="你的昵称">
+      <label for="text">留言</label>
+      <textarea id="text" maxlength="500" placeholder="写点什么吧…"></textarea>
+      <div class="error" id="error"></div>
+      <button id="submit">发表留言</button>
+    </div>
+    <div id="list"></div>
+  </div>
+<script>
+  var listEl = document.getElementById('list');
+  var nameEl = document.getElementById('name');
+  var textEl = document.getElementById('text');
+  var errorEl = document.getElementById('error');
+  var submitBtn = document.getElementById('submit');
+
+  function escapeHtml(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function showError(msg) {
+    errorEl.textContent = msg;
+    errorEl.style.display = msg ? 'block' : 'none';
+  }
+  function render(list) {
+    if (!list.length) {
+      listEl.innerHTML = '<div class="empty">还没有留言，来抢沙发～</div>';
+      return;
+    }
+    var html = '';
+    list.forEach(function (m) {
+      html += '<div class="msg">'
+        + '<div class="msg-head"><span class="msg-name">' + escapeHtml(m.name) + '</span>'
+        + '<span><span class="msg-time">' + escapeHtml(m.time) + '</span>'
+        + '<button class="del" data-id="' + m.id + '">删除</button></span></div>'
+        + '<div class="msg-text">' + escapeHtml(m.text) + '</div>'
+        + '</div>';
+    });
+    listEl.innerHTML = html;
+  }
+  function load() {
+    return fetch('/api/messages').then(function (r) { return r.json(); }).then(render);
+  }
+  submitBtn.addEventListener('click', function () {
+    var name = nameEl.value.trim();
+    var text = textEl.value.trim();
+    showError('');
+    if (!name || !text) { showError('昵称和留言都不能为空哦'); return; }
+    submitBtn.disabled = true;
+    fetch('/api/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name, text: text })
+    }).then(function (r) {
+      return r.json().then(function (data) {
+        if (!r.ok) throw new Error(data.error || '发表失败');
+        textEl.value = '';
+        return load();
+      });
+    }).catch(function (e) {
+      showError(e.message);
+    }).finally(function () {
+      submitBtn.disabled = false;
+    });
+  });
+  textEl.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) submitBtn.click();
+  });
+  listEl.addEventListener('click', function (e) {
+    var btn = e.target;
+    if (!btn.classList || !btn.classList.contains('del')) return;
+    if (!confirm('确定删除这条留言吗？')) return;
+    fetch('/api/messages/' + btn.getAttribute('data-id'), { method: 'DELETE' })
+      .then(load);
+  });
+  load();
+</script>
+</body>
+</html>
